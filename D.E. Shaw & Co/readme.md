@@ -9,10 +9,119 @@ Find the maximum achievable discount in total cost.
 
 > Note: The service provider is using "logical OR" for calculating the total discount.
 
+### Brute Force Approach:
+```py
+def getOR(arr):
+    valueOR = 0
+    for i in arr:
+        valueOR |= i
+    return valueOR
 
-Bitwise Contribution Counting with Temporary Bit Removal Approach
-#Bit_Manipulation #Greedy_Algorithm #Dynamic_Programming
+def getMaxDiscount(discounts, k):
+    n = len(discounts)
+    maxDiscount = getOR(discounts)
+    copyDiscounts = discounts.copy()
+    
+    for i in range(1, k+1):
+        multiplier = 2 ** i
+        for j in range(n):
+            original_value = copyDiscounts[j]
+            copyDiscounts[j] = discounts[j] * multiplier
+            tempMaxDiscount = getOR(copyDiscounts)
+            
+            if tempMaxDiscount > maxDiscount:
+                maxDiscount = tempMaxDiscount
+            
+            copyDiscounts[j] = original_value
+    
+    return maxDiscount
 
+discounts = [12, 12, 9]
+k = 1
+print(getMaxDiscount(discounts, k))  # ExpectedOutput: 30
+
+discounts = [10, 1]
+k = 1
+print(getMaxDiscount(discounts, k))  # ExpectedOutput: 21
+
+discounts = [5, 8]
+k = 3
+print(getMaxDiscount(discounts, k))  # ExpectedOutput: 69
+```
+
+### Bitwise Contribution Counting with Temporary Bit Removal Approach
+`#Bit_Manipulation` `#Greedy_Algorithm` `#Dynamic_Programming`
+
+#### In Python
+
+```py
+def getMaxDiscount(numServices, additionalPurchases, discounts):
+    # Count the occurrences of each bit position across all services
+    bit_count = {}
+    
+    for discount in discounts:
+        for bit_pos in range(32):
+            bit_mask = 1 << bit_pos
+            if bit_mask & discount:
+                if bit_pos in bit_count:
+                    bit_count[bit_pos] += 1
+                else:
+                    bit_count[bit_pos] = 1
+    
+    max_discount = float('-inf')
+    
+    # Evaluate the effect of additional purchases for each service
+    for original_discount in discounts:
+        # Temporarily reduce bit counts for the current service
+        for bit_pos in range(32):
+            bit_mask = 1 << bit_pos
+            if bit_mask & original_discount:
+                bit_count[bit_pos] -= 1
+        
+        # Compute the new discount value if the service is purchased additional times
+        increased_discount = original_discount * (1 << additionalPurchases)
+        temp_discount = 0
+
+        # Compute the OR value based on the modified bit counts
+        for bit_pos, count in bit_count.items():
+            if count > 0:  # Only include bits still contributing
+                temp_discount += (1 << bit_pos)
+
+        # Include the additional purchased service's impact
+        temp_discount |= increased_discount
+
+        # Update the maximum discount found
+        max_discount = max(max_discount, temp_discount)
+
+        # Restore bit counts for the current service
+        for bit_pos in range(32):
+            bit_mask = 1 << bit_pos
+            if bit_mask & original_discount:
+                bit_count[bit_pos] += 1
+
+    return max_discount
+
+# Example usage:
+# Example 01
+numServices = 3
+additionalPurchases = 1
+discounts = [12, 12, 9]
+print(getMaxDiscount(numServices, additionalPurchases, discounts))  # Expected output: 29
+
+# Example 02
+numServices = 2
+additionalPurchases = 1
+discounts = [10, 1]
+print(getMaxDiscount(numServices, additionalPurchases, discounts))  # Expected output: 21
+
+# Example 03
+numServices = 2
+additionalPurchases = 3
+discounts = [5, 8]
+print(getMaxDiscount(numServices, additionalPurchases, discounts))  # Expected output: 69
+```
+
+#### In CPP
 ``` cpp
 #include <bits/stdc++.h>
 using namespace std;
